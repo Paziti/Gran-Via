@@ -95,12 +95,11 @@
     position:sticky;
     top:0;
     height:100vh;
-    height:100svh; /* "small" viewport: el tamaño mínimo garantizado con
-      la barra de direcciones / botones del navegador visibles. A
-      diferencia de dvh (que se re-calcula en vivo apenas el navegador
-      oculta esa barra al hacer scroll), svh queda FIJO — así la carta
-      no cambia de tamaño de golpe cuando Chrome/Safari esconden o
-      muestran su interfaz. */
+    height:100svh; /* mejora progresiva si el JS de abajo no corriera */
+    height:var(--stage-vh, 100svh); /* el JS mide el alto real una sola
+      vez y lo clava acá en px — más confiable que svh/dvh solos, que en
+      navegadores integrados (WhatsApp, Instagram, etc.) a veces calculan
+      mal el "viewport chico" y dejan la carta más chica de lo que debería. */
     width:100%;
     max-width:100vw;
     display:flex;
@@ -195,7 +194,8 @@
   .scene{
     position:relative;
     width:min(88vw, 380px, calc(82vh * 0.5758));
-    width:min(88vw, 380px, calc(82svh * 0.5758)); /* svh = fijo, ver .stage */
+    width:min(88vw, 380px, calc(82svh * 0.5758));
+    width:min(88vw, 380px, calc(var(--stage-vh, 100svh) * 0.82 * 0.5758)); /* ver --stage-vh en .stage */
     aspect-ratio:380/660;
     perspective:2400px;
     perspective-origin:50% 40%;
@@ -894,6 +894,21 @@
   var ticking = false;
   var resizeTicking = false;
   var total = 1;
+  var lastWidthForVH = window.innerWidth;
+
+  // Clava el alto real (en px) del "viewport chico" en una variable CSS
+  // en vez de confiar en unidades como svh/dvh: algunos navegadores
+  // integrados (WhatsApp, Instagram y similares) las calculan mal y
+  // terminan achicando la carta. Se mide una sola vez al cargar — que es
+  // cuando la barra del navegador está visible — y NO se vuelve a tocar
+  // salvo que el ANCHO de la ventana cambie de verdad (rotación de
+  // pantalla / redimensión real), para no reintroducir el "salto" de
+  // tamaño cuando el navegador esconde o muestra sus propios botones.
+  function updateStageVH(){
+    var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+    root.style.setProperty('--stage-vh', h + 'px');
+  }
+  updateStageVH();
 
   function viewportHeight(){
     // Se mide el alto YA RENDERIZADO del .stage (fijo por el 100svh de su
@@ -954,6 +969,15 @@
       resizeTicking = true;
       requestAnimationFrame(function(){
         resizeTicking = false;
+        // Solo actualiza el alto clavado si el ANCHO cambió de verdad
+        // (rotación de pantalla, redimensión real de la ventana). Si solo
+        // cambió el alto — típico de que el navegador esconda/muestre su
+        // barra al hacer scroll — se ignora, así el tamaño de la carta
+        // queda fijo como pidió el usuario.
+        if (window.innerWidth !== lastWidthForVH){
+          lastWidthForVH = window.innerWidth;
+          updateStageVH();
+        }
         measure();
         render();
       });
