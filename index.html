@@ -180,10 +180,18 @@
     .deco-herb{ display:none; }
   }
 
+  /* El ancho y el alto se calculan JUNTOS a partir de la proporción real
+     del libro (380×660) — si se limitan por separado (ej. min(72vw,380px)
+     para el ancho y min(82vh,660px) para el alto), en un celular alto el
+     alto llega a su tope mucho antes que el ancho y el libro se ve como
+     una tira finita en vez de una página. Por eso el ancho sale del menor
+     entre "cuánto vw tenemos" y "cuánto alto tenemos, convertido a ancho
+     con la misma proporción" — así siempre se mantiene 380:660. */
   .scene{
     position:relative;
-    width:min(72vw,380px);
-    height:min(82vh,660px);
+    width:min(88vw, 380px, calc(82vh * 0.5758));
+    width:min(88vw, 380px, calc(82dvh * 0.5758));
+    aspect-ratio:380/660;
     perspective:2400px;
     perspective-origin:50% 40%;
   }
