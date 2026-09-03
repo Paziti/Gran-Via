@@ -95,7 +95,12 @@
     position:sticky;
     top:0;
     height:100vh;
-    height:100dvh; /* fallback above for browsers without dvh support */
+    height:100svh; /* "small" viewport: el tamaño mínimo garantizado con
+      la barra de direcciones / botones del navegador visibles. A
+      diferencia de dvh (que se re-calcula en vivo apenas el navegador
+      oculta esa barra al hacer scroll), svh queda FIJO — así la carta
+      no cambia de tamaño de golpe cuando Chrome/Safari esconden o
+      muestran su interfaz. */
     width:100%;
     max-width:100vw;
     display:flex;
@@ -190,7 +195,7 @@
   .scene{
     position:relative;
     width:min(88vw, 380px, calc(82vh * 0.5758));
-    width:min(88vw, 380px, calc(82dvh * 0.5758));
+    width:min(88vw, 380px, calc(82svh * 0.5758)); /* svh = fijo, ver .stage */
     aspect-ratio:380/660;
     perspective:2400px;
     perspective-origin:50% 40%;
@@ -820,6 +825,7 @@
 (function(){
   var HINGES = 6; // portada, hoja1, hoja2, hoja3, hoja4, hoja5 (postres)
   var track = document.getElementById('track');
+  var stageEl = document.querySelector('.stage');
   var leaves = Array.prototype.slice.call(document.querySelectorAll('.leaf[data-leaf]'));
   leaves.sort(function(a,b){ return +a.dataset.leaf - +b.dataset.leaf; });
   var hint = document.getElementById('hint');
@@ -890,7 +896,12 @@
   var total = 1;
 
   function viewportHeight(){
-    return (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+    // Se mide el alto YA RENDERIZADO del .stage (fijo por el 100svh de su
+    // CSS) en vez de window.visualViewport/innerHeight — esos dos cambian
+    // en vivo apenas el navegador esconde su barra al hacer scroll, y eso
+    // hacía que el libro se re-escalara solo. Con el alto del .stage el
+    // cálculo del progreso de scroll queda tan fijo como el tamaño visual.
+    return stageEl.offsetHeight || (window.visualViewport && window.visualViewport.height) || window.innerHeight;
   }
 
   function measure(){
