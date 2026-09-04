@@ -102,19 +102,23 @@
       mal el "viewport chico" y dejan la carta más chica de lo que debería. */
     width:100%;
     max-width:100vw;
+    box-sizing:border-box;
     display:flex;
+    flex-direction:column;
     align-items:center;
     justify-content:center;
+    gap:clamp(10px,2.4vh,20px);
+    padding:calc(clamp(10px,2.4vh,20px) + 44px) 0 clamp(10px,2.4vh,20px); /* el extra arriba deja lugar al hint sin pisar la tapa */
     overflow:hidden;
     background:
-      radial-gradient(120% 90% at 50% 18%, #232019 0%, var(--ink) 62%, #0d0c0a 100%);
+      radial-gradient(135% 95% at 50% 12%, #c21630 0%, var(--garnet) 48%, #57091a 100%);
   }
   .stage::before{
     content:"";
     position:absolute;
     inset:0;
     background:
-      repeating-linear-gradient(0deg, rgba(255,255,255,.015) 0 1px, transparent 1px 3px);
+      repeating-linear-gradient(0deg, rgba(255,255,255,.02) 0 1px, transparent 1px 3px);
     pointer-events:none;
     opacity:.5;
   }
@@ -133,7 +137,7 @@
   }
   .stage-deco svg{
     position:absolute;
-    stroke:var(--cream-text-soft);
+    stroke:var(--cream-text);
     fill:none;
     stroke-width:1.3;
     stroke-linecap:round;
@@ -142,38 +146,38 @@
   .deco-leaf{
     width:clamp(120px,34vw,190px); height:auto;
     top:4%; left:-9%;
-    opacity:.14;
+    opacity:.18;
     transform:rotate(-12deg);
   }
   .deco-herb{
     width:clamp(60px,16vw,90px); height:auto;
     bottom:16%; left:2%;
-    opacity:.12;
+    opacity:.16;
     transform:rotate(8deg);
   }
   .deco-tomato{
     width:clamp(90px,24vw,140px); height:auto;
     bottom:-7%; right:-6%;
-    opacity:.13;
+    opacity:.17;
     transform:rotate(6deg);
   }
   .deco-burger{
     width:clamp(64px,17vw,96px); height:auto;
     top:7%; right:4%;
-    opacity:.16;
+    opacity:.2;
   }
   .stage-deco svg.deco-dot{
     stroke:none;
-    fill:var(--cream-text-soft);
+    fill:var(--cream-text);
   }
-  .deco-dot-a{ width:5px; top:22%; right:14%; opacity:.35; }
-  .deco-dot-b{ width:4px; bottom:32%; left:11%; opacity:.3; }
-  .deco-dot-c{ width:6px; top:64%; right:9%; opacity:.25; }
+  .deco-dot-a{ width:5px; top:22%; right:14%; opacity:.4; }
+  .deco-dot-b{ width:4px; bottom:32%; left:11%; opacity:.35; }
+  .deco-dot-c{ width:6px; top:64%; right:9%; opacity:.3; }
   .deco-plus{
     width:14px; height:14px;
-    stroke:var(--cream-text-soft);
+    stroke:var(--cream-text);
     stroke-width:1.2;
-    opacity:.22;
+    opacity:.26;
   }
   .deco-plus-a{ top:14%; right:22%; }
   .deco-plus-b{ bottom:11%; left:20%; }
@@ -195,7 +199,10 @@
     position:relative;
     width:min(88vw, 380px, calc(82vh * 0.5758));
     width:min(88vw, 380px, calc(82svh * 0.5758));
-    width:min(88vw, 380px, calc(var(--stage-vh, 100svh) * 0.82 * 0.5758)); /* ver --stage-vh en .stage */
+    /* -112px reserva el lugar del indicador de abajo (.page-nav) + el
+       padding/gap del .stage, que ahora son elementos reales en el flujo
+       (columna flex) y no una barra flotante encima del fondo. */
+    width:min(88vw, 380px, calc((var(--stage-vh, 100svh) - 158px) * 0.96 * 0.5758)); /* ver --stage-vh en .stage */
     aspect-ratio:380/660;
     perspective:2400px;
     perspective-origin:50% 40%;
@@ -357,7 +364,7 @@
   .page-face{
     background:var(--paper);
     color:var(--text);
-    padding:11% 9% 8%;
+    padding:9% 7.5% 7%;
     border:1px solid rgba(0,0,0,.05);
   }
   .page-face .page-head{
@@ -377,10 +384,57 @@
     font-size:clamp(1.4rem,4.6vw,1.75rem);
     letter-spacing:.01em;
   }
+  /* dibujo de línea propio de cada página — un plato/verdura que
+     identifica la sección, no solo textura de fondo */
+  .page-icon{
+    position:absolute;
+    top:16%;
+    right:7.5%;
+    width:16%;
+    max-width:60px;
+    min-width:38px;
+    height:auto;
+    color:var(--garnet);
+    opacity:.8;
+  }
+  .page-icon svg{
+    width:100%;
+    height:100%;
+    display:block;
+    stroke:currentColor;
+    fill:none;
+    stroke-width:1.3;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
   .page-face .section-label{
     display:block;
     color:var(--garnet);
     margin-bottom:.25rem;
+  }
+
+  /* misma ilustración de la página, repetida grande y muy tenue abajo —
+     llena el espacio vacío cuando una sección tiene pocos platos, en vez
+     de dejar un bloque en blanco. */
+  .page-watermark{
+    position:absolute;
+    right:-8%;
+    bottom:2%;
+    width:62%;
+    max-width:230px;
+    color:var(--garnet);
+    opacity:.055;
+    pointer-events:none;
+  }
+  .page-watermark svg{
+    width:100%;
+    height:auto;
+    display:block;
+    stroke:currentColor;
+    fill:none;
+    stroke-width:.8;
+    stroke-linecap:round;
+    stroke-linejoin:round;
   }
 
   .dish-list{
@@ -463,17 +517,18 @@
     color:var(--text-soft);
   }
 
-  /* ---------- scroll hint ---------- */
+  /* ---------- scroll hint (arriba de todo — abajo ahora vive el
+     indicador de secciones, .page-nav) ---------- */
   .hint{
     position:absolute;
     left:50%;
-    bottom:6%;
+    top:10px;
     transform:translateX(-50%);
     display:flex;
     flex-direction:column;
     align-items:center;
-    gap:.4rem;
-    color:var(--cream-text-soft);
+    gap:.3rem;
+    color:var(--cream-text);
     z-index:3;
     transition:opacity .3s ease;
   }
@@ -494,57 +549,80 @@
     .hint .chev{animation:none;}
   }
 
-  /* ---------- side rail / progress dots ---------- */
-  .rail{
-    position:fixed;
-    right:clamp(14px,3vw,34px);
-    top:50%;
-    transform:translateY(-50%);
+  /* ---------- indicador de secciones, abajo del libro ---------- */
+  .page-nav{
+    position:relative;
+    z-index:4;
     display:flex;
     flex-direction:column;
-    align-items:flex-end;
-    gap:14px;
-    z-index:4;
+    align-items:center;
+    gap:10px;
+    flex:none;
   }
-  .rail button{
+  .page-nav-pill{
+    display:flex;
+    align-items:center;
+    gap:.6rem;
+    background:rgba(0,0,0,.18);
+    border:1px solid rgba(255,255,255,.16);
+    padding:.4rem .3rem .4rem .9rem;
+    border-radius:999px;
+    backdrop-filter:blur(2px);
+  }
+  .nav-label{
+    font-family:'Work Sans',sans-serif;
+    font-size:.66rem;
+    font-weight:600;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--cream-text);
+    min-width:7.2em;
+    text-align:center;
+  }
+  .nav-arrow{
     all:unset;
     display:flex;
     align-items:center;
-    gap:8px;
+    justify-content:center;
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    color:var(--cream-text);
+    font-size:.95rem;
+    line-height:1;
+    cursor:pointer;
+    transition:background .2s ease, opacity .2s ease;
+  }
+  .nav-arrow:hover,
+  .nav-arrow:focus-visible{ background:rgba(255,255,255,.18); }
+  .nav-arrow:disabled{ opacity:.3; cursor:default; }
+  .nav-arrow:disabled:hover{ background:none; }
+  .nav-dots{
+    display:flex;
+    align-items:center;
+    gap:9px;
+  }
+  .nav-dots button{
+    all:unset;
+    width:16px;
+    height:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
     cursor:pointer;
   }
-  .rail .dot{
-    width:7px;
-    height:7px;
+  .nav-dots .dot{
+    width:6px;
+    height:6px;
     border-radius:50%;
-    background:rgba(243,239,230,.28);
+    background:rgba(243,239,230,.4);
     transition:background .25s ease, transform .25s ease;
   }
-  .rail button.active .dot{
-    background:var(--garnet);
-    transform:scale(1.5);
+  .nav-dots button.active .dot{
+    background:var(--cream-text);
+    transform:scale(1.6);
   }
-  .rail .rail-label{
-    font-size:.62rem;
-    letter-spacing:.1em;
-    text-transform:uppercase;
-    color:var(--cream-text-soft);
-    opacity:0;
-    transform:translateX(4px);
-    transition:opacity .2s ease, transform .2s ease;
-    white-space:nowrap;
-  }
-  .rail button.active .rail-label,
-  .rail button:hover .rail-label,
-  .rail button:focus-visible .rail-label{
-    opacity:1;
-    transform:translateX(0);
-  }
-  .rail button:focus-visible .dot{outline:2px solid var(--garnet); outline-offset:3px;}
-
-  @media (max-width:560px){
-    .rail .rail-label{display:none;}
-  }
+  .nav-dots button:focus-visible .dot{ outline:2px solid var(--cream-text); outline-offset:3px; }
 </style>
 </head>
 <body>
@@ -628,6 +706,8 @@
         <div class="leaf" data-leaf="5" style="z-index:2;">
           <div class="face page-face">
             <div class="page-head"><span class="page-num mono">05</span><span class="page-num mono">GRAN VÍA</span></div>
+            <div class="page-icon" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M14 22h20l-3 19a2 2 0 0 1-2 2H19a2 2 0 0 1-2-2Z"/><path d="M12 22c0-6.5 5.5-11 12-11s12 4.5 12 11"/><path d="M14 22h20"/><circle cx="24" cy="7" r="1.8" fill="currentColor" stroke="none"/><path d="M24 9.5v3.5"/></svg></div>
+            <div class="page-watermark" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M14 22h20l-3 19a2 2 0 0 1-2 2H19a2 2 0 0 1-2-2Z"/><path d="M12 22c0-6.5 5.5-11 12-11s12 4.5 12 11"/><path d="M14 22h20"/><circle cx="24" cy="7" r="1.8" fill="currentColor" stroke="none"/><path d="M24 9.5v3.5"/></svg></div>
             <span class="eyebrow section-label">05 — Para cerrar</span>
             <h2 class="display">Postres</h2>
             <ul class="dish-list">
@@ -660,6 +740,8 @@
         <div class="leaf" data-leaf="4" style="z-index:3;">
           <div class="face page-face">
             <div class="page-head"><span class="page-num mono">04</span><span class="page-num mono">GRAN VÍA</span></div>
+            <div class="page-icon" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M6 24c6-10 20-14 30-8-4 3-4 13 0 16-10 6-24 2-30-8Z"/><path d="M36 16c4 2 6 5 6 8s-2 6-6 8"/><circle cx="14" cy="22" r="1.3" fill="currentColor" stroke="none"/></svg></div>
+            <div class="page-watermark" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M6 24c6-10 20-14 30-8-4 3-4 13 0 16-10 6-24 2-30-8Z"/><path d="M36 16c4 2 6 5 6 8s-2 6-6 8"/><circle cx="14" cy="22" r="1.3" fill="currentColor" stroke="none"/></svg></div>
             <span class="eyebrow section-label">04 — Del mar</span>
             <h2 class="display">Del mar</h2>
             <ul class="dish-list">
@@ -687,6 +769,8 @@
         <div class="leaf" data-leaf="3" style="z-index:4;">
           <div class="face page-face">
             <div class="page-head"><span class="page-num mono">03</span><span class="page-num mono">GRAN VÍA</span></div>
+            <div class="page-icon" aria-hidden="true"><svg viewBox="0 0 50 45"><path d="M6 17C6 10 15 5 25 5s19 5 19 12"/><circle cx="16.5" cy="10" r="0.9" fill="currentColor" stroke="none"/><circle cx="25" cy="7.5" r="0.9" fill="currentColor" stroke="none"/><circle cx="33" cy="10" r="0.9" fill="currentColor" stroke="none"/><path d="M5 19h40"/><path d="M7 25c3 3 33 3 36 0"/><path d="M6 31h38"/><path d="M8 31c0 4 4 7 17 7s17-3 17-7"/></svg></div>
+            <div class="page-watermark" aria-hidden="true"><svg viewBox="0 0 50 45"><path d="M6 17C6 10 15 5 25 5s19 5 19 12"/><circle cx="16.5" cy="10" r="0.9" fill="currentColor" stroke="none"/><circle cx="25" cy="7.5" r="0.9" fill="currentColor" stroke="none"/><circle cx="33" cy="10" r="0.9" fill="currentColor" stroke="none"/><path d="M5 19h40"/><path d="M7 25c3 3 33 3 36 0"/><path d="M6 31h38"/><path d="M8 31c0 4 4 7 17 7s17-3 17-7"/></svg></div>
             <span class="eyebrow section-label">03 — De la plancha</span>
             <h2 class="display">Burgers y sandwiches</h2>
             <ul class="dish-list">
@@ -722,6 +806,8 @@
         <div class="leaf" data-leaf="2" style="z-index:5;">
           <div class="face page-face">
             <div class="page-head"><span class="page-num mono">02</span><span class="page-num mono">GRAN VÍA</span></div>
+            <div class="page-icon" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M6 22a18 15 0 0 0 36 0"/><line x1="6" y1="22" x2="42" y2="22"/><path d="M24 22v-8"/><path d="M24 14c-6 0-10-4-10-10"/><path d="M24 14c6 0 10-4 10-10"/></svg></div>
+            <div class="page-watermark" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M6 22a18 15 0 0 0 36 0"/><line x1="6" y1="22" x2="42" y2="22"/><path d="M24 22v-8"/><path d="M24 14c-6 0-10-4-10-10"/><path d="M24 14c6 0 10-4 10-10"/></svg></div>
             <span class="eyebrow section-label">02 — Comida real, simple</span>
             <h2 class="display">Ensaladas y bowls</h2>
             <ul class="dish-list">
@@ -757,6 +843,8 @@
         <div class="leaf" data-leaf="1" style="z-index:6;">
           <div class="face page-face">
             <div class="page-head"><span class="page-num mono">01</span><span class="page-num mono">GRAN VÍA</span></div>
+            <div class="page-icon" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M14 22 L10 44 L38 44 L34 22 Z"/><path d="M18 22 V10"/><path d="M24 22 V6"/><path d="M30 22 V10"/><path d="M22 22 V15"/><path d="M26 22 V15"/></svg></div>
+            <div class="page-watermark" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M14 22 L10 44 L38 44 L34 22 Z"/><path d="M18 22 V10"/><path d="M24 22 V6"/><path d="M30 22 V10"/><path d="M22 22 V15"/><path d="M26 22 V15"/></svg></div>
             <span class="eyebrow section-label">01 — Para picar</span>
             <h2 class="display">Para empezar</h2>
             <ul class="dish-list">
@@ -809,15 +897,22 @@
       <span class="chev">↓</span>
     </div>
 
-    <nav class="rail" id="rail" aria-label="Secciones de la carta">
-      <button data-i="0" class="active"><span class="rail-label">Portada</span><span class="dot"></span></button>
-      <button data-i="1"><span class="rail-label">Para empezar</span><span class="dot"></span></button>
-      <button data-i="2"><span class="rail-label">Ensaladas y bowls</span><span class="dot"></span></button>
-      <button data-i="3"><span class="rail-label">Burgers</span><span class="dot"></span></button>
-      <button data-i="4"><span class="rail-label">Del mar</span><span class="dot"></span></button>
-      <button data-i="5"><span class="rail-label">Postres</span><span class="dot"></span></button>
-      <button data-i="6"><span class="rail-label">Cierre</span><span class="dot"></span></button>
-    </nav>
+    <div class="page-nav" id="rail" role="group" aria-label="Secciones de la carta">
+      <div class="page-nav-pill">
+        <button class="nav-arrow" id="navPrev" type="button" aria-label="Sección anterior">‹</button>
+        <span class="nav-label" id="navLabel">Portada</span>
+        <button class="nav-arrow" id="navNext" type="button" aria-label="Sección siguiente">›</button>
+      </div>
+      <div class="nav-dots">
+        <button data-i="0" class="active" aria-label="Portada"><span class="dot"></span></button>
+        <button data-i="1" aria-label="Para empezar"><span class="dot"></span></button>
+        <button data-i="2" aria-label="Ensaladas y bowls"><span class="dot"></span></button>
+        <button data-i="3" aria-label="Burgers"><span class="dot"></span></button>
+        <button data-i="4" aria-label="Del mar"><span class="dot"></span></button>
+        <button data-i="5" aria-label="Postres"><span class="dot"></span></button>
+        <button data-i="6" aria-label="Cierre"><span class="dot"></span></button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -829,7 +924,12 @@
   var leaves = Array.prototype.slice.call(document.querySelectorAll('.leaf[data-leaf]'));
   leaves.sort(function(a,b){ return +a.dataset.leaf - +b.dataset.leaf; });
   var hint = document.getElementById('hint');
-  var railButtons = Array.prototype.slice.call(document.querySelectorAll('.rail button'));
+  var railButtons = Array.prototype.slice.call(document.querySelectorAll('.nav-dots button'));
+  var navLabel = document.getElementById('navLabel');
+  var navPrev = document.getElementById('navPrev');
+  var navNext = document.getElementById('navNext');
+  var NAV_LABELS = ['Portada','Para empezar','Ensaladas y bowls','Burgers','Del mar','Postres','Cierre'];
+  var currentIndex = 0;
   var replayBtn = document.getElementById('replay');
   var root = document.documentElement;
 
@@ -952,9 +1052,15 @@
     hint.style.opacity = raw > 0.03 ? '0' : '1';
 
     var current = Math.max(0, Math.min(HINGES, Math.round(progress)));
+    if (current !== currentIndex || navLabel.textContent === ''){
+      currentIndex = current;
+      navLabel.textContent = NAV_LABELS[current];
+    }
     railButtons.forEach(function(btn){
       btn.classList.toggle('active', +btn.dataset.i === current);
     });
+    navPrev.disabled = current <= 0;
+    navNext.disabled = current >= HINGES;
   }
 
   function onScroll(){
@@ -992,6 +1098,8 @@
   railButtons.forEach(function(btn){
     btn.addEventListener('click', function(){ goTo(+btn.dataset.i); });
   });
+  navPrev.addEventListener('click', function(){ goTo(Math.max(0, currentIndex - 1)); });
+  navNext.addEventListener('click', function(){ goTo(Math.min(HINGES, currentIndex + 1)); });
   replayBtn.addEventListener('click', function(){ goTo(0); });
 
   window.addEventListener('resize', onResize, { passive: true });
